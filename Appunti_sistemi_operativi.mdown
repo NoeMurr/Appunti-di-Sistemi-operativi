@@ -223,11 +223,55 @@ L'effetto convoglio è un termine per indicare l'accodamento di processi brevi d
 
 ![Esempio effetto convoglio](res/es_effetto_convoglio.png)
 
+#### Shortest-Job-First (SJF)
 
+Questo algoritmo nasce dalla necessità di evitare l'effetto convoglio. Funziona nel modo seguente:
 
+1. Associa ad ogni processo una lunghezza del prossimo burst di CPU, stimandola mediante una formula che si vedrà in seguito.
+2. Il processo con il burst più breve viene selezionato.
+3. Alla fine del burst di CPU del processo selezionato la procedura viene ripetuta.
 
+Questo algoritmo per sua definizione non è necessariamente preemtive, ma ne esiste una versione che ammette prelazione chiamata **Short-Remaining-Time-First** che funziona nel modo seguente:
 
+1. Associa ad ogni processo una lunghezza del prossimo burst di CPU, stimandola mediante una formula che si vedrà in seguito.
+2. Il processo con il burst più breve viene selezionato.
+3. Ad ogni arrivo di un nuovo processo nella ready queque la procedura viene ripetuta.
 
+**N.B.** SJF è un algoritmo ottimo rispetto all'ottimizzazione del tempo di attesa!
+
+##### Stima del successivo burst di CPU
+
+Come scritto in precedenza è possibile effettuare solo una stima del prossimo burst di CPU. Questa viene fatta utilizzando una formula che tiene conto di due fattori: 
+
+1. La lunghezza del burst precedente t<sub>n</sub>.
+2. la stima fatta la volta precedente &tau;<sub>n</sub>.
+
+Questi due fattori vengono utilizzati insieme ad un parametro che viene scelto in fase implementativa: 0 &le; &alpha; &le; 1.
+
+La formula per la stima è la seguente:
+τ<sub>n+1</sub> = α * t<sub>n</sub> + (1-α) * τ<sub>n</sub>
+
+**N.B.** Ci sono un paio di osservazioni importanti:
+
+* Cambiando il valore di &alpha; si sta in effetti decidendo quanto tener conto delle lunghezze dei burst avuti in passato e quanto invece tener conto del burst immediatamente precedente. Infatti:
+    - &alpha; = 0 &rarr; &tau;<sub>n+1</sub> = &tau;<sub>n</sub>
+    - &alpha; = 1 &rarr; &tau;<sub>n+1</sub> = t<sub>n</sub>
+* Espandendo la formula (è ricorsiva) si nota immediatamente che scegliendo &alpha; &le; 1 si fa in modo che ogni termine successivo pesa meno di quello precedente. Questo implica che si tende ad ignorare la storia "vecchia" ed a tenere in maggior considerazione la storia "recente".
+
+#### Scheduling a priorità 
+
+L'SJF è un algoritmo che in qualche modo contiene il concetto di priorità, basti pensare alla priorità come se fosse:<br> 1 / burst_di_CPU.
+
+Il procedimento di un generico algoritmo di scheduling con priorità è il seguente:
+
+1. Ad ogni processo viene associata una priorità.
+2. Viene messo in esecuzione il processo a priorità più alta.
+3. si ripete dal punto 1.
+
+Le problematiche che subito vengono in mente in questo caso sono le seguenti:
+
+* Come assengare la priorità.
+* Come scegliere quando il 
 
 
 
