@@ -186,7 +186,21 @@ Esistono vari tipi di scheduler che si occupano di cose differenti:
 ### Scheduling della CPU
 
 Lo scheduling della CPU è una parte molto critica del sistema operativo, a causa della sua grande frequenza di invocazione.
-Questo tipo di schema si basa sul concetto di _**Burst**_ un burst è una sequenza di operazioni: ci possono essere burst di CPU oppure burst di I/O.
+
+#### Burst
+
+Lo schema di esecuzione di un processo si basa sul concetto di _**Burst**_ il quale è una sequenza di operazioni: ci possono essere burst di CPU oppure burst di I/O.
+L'esecuzione altro non è che l'alternanza ciclica di burst di CPU e burst di I/O.   
+
+#### Preemption
+
+Un altro meccanismo fondamentale nella trattazione degli OS è la prelazione (preemption). Questo meccanismo è quello che permette al sistema operativo di costringere un processo a rilasciare la CPU nonostante questo non abbia ancora finito il suo burst di esecuzione. Questo è un concetto che non è sempre presente all'interno di tutti gli algoritmi di scheduling, ma che per alcuni risulta essenziale (es. round robin).
+
+
+### Algoritmi di scheduling
+
+Esistono vari algoritmi di scheduling. Ognuno dei quali ha sia alcuni vantaggi che alcuni svantaggi.
+
 
 
 
