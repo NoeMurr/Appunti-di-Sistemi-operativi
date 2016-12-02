@@ -1,0 +1,193 @@
+# Appunti Sistemi Operativi
+
+## Processi 
+
+Un processo è un istanza di un programma in esecuzione.
+Ogni processo ha un immagine di memoria, la quale è composta dai seguenti campi:
+
+1. Codice o testo: contiene il codice vero e proprio che deve essere eseguito;
+2. Dati: contiene l'insieme delle variabili globali. (è la sezione data dell'asm);
+3. Stack: il normalissimo stack di esecuzione di un processo;
+4. Heap: parte della memoria dinamica di un processo;
+5. Attributi: è un campo che contiene un certo numero di informazioni. relative al processo, utili al sistema operativo. I più importanti di questi sono il PCB ed il PID (Process ID);
+
+### PCB
+
+Il PCB (Process Control Block) è un attributo che viene associato ad ogni processo. Contiene una serie di campi che sono necessari alle operazioni di Scheduling e di Dispatching. Questi campi sono: 
+
+* Pointer: ...;
+* Program State: è lo stato del processo, può essere: pronto, in esecuzione, in attesa o in swap;
+* Program number: è il numero relativo al processo;
+* Program counter: è il valore del registro program counter il quale è necessario per il cambio di contesto.
+* Registers: è una zona di memoria che contiene il contenuto dei registri nel momento in cui il processo è stato interrotto l'ultima volta. Questo campo come il precedente è utile nelle operazioni di cambio di contesto.
+* Memory limits: Come è ben risaputo ogni processo all'interno del OS ha bisogno del proprio spazio di memoria e non può scrivere o leggere nello spazion di memoria associatio ad un altro processo. Questo campo identifica i limiti di memoria in cui il processo **deve** stare.
+* List Of Open Files: Il nome è auto esplicativo, contiene la lista dei file aperti. 
+
+### Stati di un processo
+
+Ogni processo all'interno di un sistema operativo è in uno _stato_. Supponiamo di avere un processo che debba effettuare delle operazioni di input output, fintanto che queste operazioni non sono terminate è inutile tentare di rieseguire il processo dato che il processo non potrebbe fare nulla se non occupare la CPU inutilmente.
+
+Gli stati possibili di un processo sono 3 (4 se contiamo lo swap ma si parlerà di questo quando si parlerà di Scheduling):
+
+1. Pronto: Il processo è già stato ammesso nel sistema ed è pronto per essere eseguito.
+2. Esecuzione: Il processo sta effettivamente utilizzando la CPU. Ovviamente solo un processo alla volta per CPU può trovarsi contemporaneamente in questo stato.
+3. Attesa: Un processo si può trovare in questo stato quando sta attendendo un evento, che questo sia di I/O oppure che venga scatenato da un altro processo.
+
+### Operazioni sui processi
+
+#### Scheduling
+
+L'operazione di scheduling è un operazione che permette di decidere quale tra i vari processi nello stato di pronto debba essere mandato in esecuzione. Questa operazione **NON** effettua il cambio di contesto. Il processo del OS che si occupa di effettuare lo Scheduling è lo Scheduler.
+
+#### Dispatching
+
+Questa è l'operazione che fisicamente effettua il cambio di contesto. Viene effettuata dal Dispatcher ed è composta dai seguenti passaggi: 
+
+1. Salvare lo stato del processo vecchio nel suo PCB. Quindi salvare tutti i registri ed il program counter.
+2. Prelevare i dati dei vari registri compreso il Program counter dal PCB del nuovo processo e metterli nei rispettivi registri.
+3. Passare dalla modalità supervisore alla modalità utente per dare il controllo della CPU al processo nuovo.
+
+### Operazioni dei processi
+
+Ogni processo può effettuare determinate operazioni riguardanti altri processi.
+
+#### Creazione di un processo
+
+Ogni processo può creare dei processi detti processi figli. Questa procedura di creazione del processo si può svolgere in due modi: il primo è quello spartire le risorse con il figlio e quindi di non richiedere risorse aggiuntive all'OS, il secondo è quello di creare un processo che richieda risorse al Sistema esattamente come se fosse un processo nuovo.
+
+Oltre che nel modo di creazione vi è un altra importante distinzione tra i processi figli: **La modalità di esecuzione**. La quale può essere:
+
+* Sincrona: il processo padre si blocca ed attende che il processo figlio abbia terminato un determinato compito;
+* Asincrona: il processo padre ed il figlio procedono in modo _parallelo_.
+
+##### Creazione di un processo sotto linux
+
+Sotto linux è possibile creare un processo nel seguente modo.
+
+```c
+#include <stdio.h>
+void main(int argc, char *argv[]){
+
+    int pid;
+    pid = fork(); /* genera un nuovo processo */
+
+    if (pid < 0) { /* errore */
+        fprintf(stderr, “Errore di creazione”); exit(-1);
+    } else if (pid == 0) { /* codice del figlio */
+        execlp(“/bin/ls”, “ls”, NULL); } 
+    else { /* codice del padre */
+        wait(NULL); /* padre attende il figlio */
+        printf(“Figlio ha terminato.”);
+        exit(0); 
+    }
+}
+```
+
+Le tre funzioni importanti sono:
+
+* Fork: questa è un system call che genera un processo **Identico** al padre in tutto e per tutto. Restituisce: un numero negativo in caso di errore, 0 al processo figlio ed il pid del figlio al processo padre (ricorda che questa funizone viene chiamata in entrambi i processi).
+* Excec: questa System Call si occupa di **sostituire** il codice del processo con quello di un altro processo specificato come parametro.
+* Wait: permette l'esecuzione sincrona, cioè permette al processo di attendere la terminazione di uno dei suoi processi figli.
+
+#### Terminazione di un processo
+
+Un processo può terminare per tre ragioni:
+
+1. Il processo finisce la sa esecuzione;
+2. Il processo viene terminato forzatamente dal padre. Può accadere per le più svariate ragioni;
+3. Il processo viene terminato forzatamente dal OS a causa di un errrore.
+
+## Thread
+
+Un thread è definibile come un unità minima di esecuzione della CPU.
+Ogni thread è collegato ad un processo e di questo condivide: Lo spazio di indirizzamento e le risorse del sistema.
+
+Ciò che cambia tra un thread ed un altro è:
+
+1. Stato di esecuzione;
+2. Program counter;
+3. Stack;
+4. Insieme dei registri;
+
+Per far si che un processo possa eseguire più di un thread alla volta è necessario che l'OS sul quale gira supporti il **Multithreading** 
+
+### Vantaggi nell'utilizzo delle thread
+
+Vi sono numerosi vantaggi nell'utilizzo delle thread al posto dei processi: 
+
+* Riduzione del tempo di risposta: Dato che una thread può essere eseguita mentre un altra sta effettuando delle operazioni bloccanti (es. I/O);
+* Condivisione delle risorse: Le thread condividono lo spazio di indirizzamento per cui non si rendono necessari tutti i meccanismi di comunicazioni che sono necessari per la comunicazione tra processi;
+* Il context switch, la creazione e la terminazione dei processi sono molto più lente rispetto alle corrispettive operazioni per le thread.
+* Se le thread vengono fatte girare su un sitema multiprocessore aumentano il parallelismo del processo che può far svolgere un thread in ogni processore.
+
+### Tipi di implementazione delle thread
+
+Per implementare le thread vi sono due metodi fondamentali:
+
+1. User-level thread: Sono delle thread che vengono implementate a livello utente tramite delle normali librerie. Il kernel in questo modo ignora l'esistenza delle thread le quali vengono parallelizzate nel quanto di tempo dedicato al processo (es. le thread di java).
+    * Vantaggi: 
+        - Non rendono necessario il passaggio alla modalità kernel per eseguire il cambio di contesto tra thread il che aumenta l'efficienza
+        - Il meccanismo di scheduling può variare da applicazione ad applicazione basta cambiare l'implementazione.
+        - Portabilità del codice: il codice dell'applicazione non è legato alle system call del kernel per eseguire le thread.
+    * Svantaggi:
+        - Il blocco di una thread blocca l'intero processo;
+        - non è possibile sfruttare un multiprocessore, dato che il kernel non sa che il processore sta eseguendo più thread. 
+2. Kernel-level thread: Queste al contrario delle prime vengono create dal kernel il quale ne conosce l'esistenza e le schedula come ritiene più opportuno (es. le PThread).
+    * Vantaggi:
+        - Il blocco di un thread non blocca l'intero processo: è infatti il kernel a schedulare ogni thread separatamente.
+        - Più thread possono essere attivi allo stesso momento su diverse CPU
+        - anche i processi del OS possono essere multithreading.
+    * Svantaggi:
+        - Scarsa efficienza: ogni context switch deve passare per il kernel.
+3. Esistono anche degli approcci che combinano i due precedenti modelli (es. sun solaris).
+
+![Esempio implementazione thread](res/thread.png)
+
+## Esecuzione del Sistema Operativo
+
+Il sistema operativo può essere visto a tutti gli effetti come un insieme di processi. Quindi si pongono dei quesiti abbastanza importanti:
+
+* Quando viene eseguito l'OS? 
+* In che modo viene eseguito l'OS? 
+
+Per rispondere alla prima domanda: il sistema operativo viene schedulato esattamente come gli altri processi, ma oltre a ciò questo prende il controllo della macchina anche per rispondere a determinati interrupt che vengono generati a livello hardware.
+
+Per quanto riguarda la seconda domanda la risposta dipenda da come viene implementato l'OS. Vi sono 3 possibilità: 
+
+1. Kernel separato: In questa implementazione il server agisce al di fuori di ogni processo e **NON** viene considerato come un processo qualunque. Questo infatti esegue in una modalità privilegiata e possiede uno spazio di indirizzamento privato in memoria.
+2. Kernel eseguito all'interno di un processo utente: In questa versione viene creata una serie di funzioni (System Call) che possono essere eseguite in modalità protetta ma che vengono chiamate dai normalissimi processi utente. Per fare questo si fa in modo che il codice ed i dati del sistema operativo siano condivisi tra tutti i processi utente in modo che possano accedere senza problemi alle funzioni necessarie.
+Questa implementazione ha dei vantaggi che vanno considerati:
+    * Quando arriva un interrupt non è necessario effettuare un Context switch ma è sufficente effettuare un *mode* switch il quale consiste solo nel cambio di modalità e permette di evitare la perdita di tempo relativa al context switch.
+    * L'OS può decidere, al termine del suo lavoro, se effettuare un altro mode switch oppure se effettuare un Context Switch e cambiare processo in esecuzione.
+3. Kernel visto come insieme di processi effettivi: In questo caso il kernel viene eseguito in modalità protetta, ma come un insieme di processi di conseguenza questi processi vengono schedulati uno alla volta esattamente come gli altri. Ovviamente una piccola parte del sistema deve essere al di sopra dei processi (almeno lo scheduler). I vantaggi di questa implementazione sono:
+    * La mantenibilità e la modularità del codice: cambiare un processo del sistema operativo risulta molto semplice;
+    * In sistemi multiprocessore è possibile che uno o più processori siano costantemente dedicati ai processi del sistema operativo. 
+
+
+## Scheduling
+
+Lo scheduling di un processo significa assegnargli una quantità di tempo ben definita. Per poter eseguire un processo con il paradigma della multiprogrammazione è necessario seguire delle regole ben definite sia per l'ammissione di un processo nel sistema (quindi in memoria) sia per l'esecuzione di tale processo da parte della CPU.
+
+Un processo che deve essere eseguito deve quindi essere messo in una coda dei processi pronti mentre uno che deve effettuare degli I/O deve uscire terminare gli I/O e successivamente essere rimesso nella coda dei processi pronti.
+Un possibile diagramma di accodamento è il seguente:
+
+![diagramma di accodamento](res/diagramma_accodamento.png)
+
+### Tipi di scheduler
+
+Esistono vari tipi di scheduler che si occupano di cose differenti:
+
+* Scheduler a breve termine: si occupa di schedulare accesso di processi alla CPU. Il compito di questo scheduler è molto importante e va fatto in meno tempo possibile dato che viene eseguito molto spesso ( es 1 volta ogni millisecondo ) quindi è necessario che sia basato su un algoritmo che sia O(&#xb5;s). 
+* Scheduler a lungo termine: si occupa dello scheduling dei processi in memoria, serve per l'ammissione dei processi al sistema e quindi viene chiamato molto più raramente di quello a breve termine. Ci si accontenta di un algoritmo in O(ms).
+* Scheduler a medio termine: si tratta di uno scheduler che viene chiamato solamente quando si hanno sistemi con memoria virtuale. Ai occupa di strappare momentaneamente un processo dalla CPU e portarlo nella memoria fisica allo scopo di ridurre il grado di multiprogrammazione dell'insieme di processi.
+
+![diagramma scheduler](res/diagramma_schedulers.png)
+
+### Scheduling della CPU
+
+Lo scheduling della CPU è una parte molto critica del sistema operativo, a causa della sua grande frequenza di invocazione.
+Questo tipo di schema si basa sul concetto di _**Burst**_ un burst è una sequenza di operazioni: ci possono essere burst di CPU oppure burst di I/O.
+
+
+
+
