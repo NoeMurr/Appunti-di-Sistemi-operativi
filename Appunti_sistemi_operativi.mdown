@@ -199,7 +199,34 @@ Un altro meccanismo fondamentale nella trattazione degli OS è la prelazione (pr
 
 ### Algoritmi di scheduling
 
-Esistono vari algoritmi di scheduling. Ognuno dei quali ha sia alcuni vantaggi che alcuni svantaggi.
+Esistono vari algoritmi di scheduling. Ognuno dei quali ha sia alcuni vantaggi che alcuni svantaggi, Si rende quindi necessario avere delle metriche per determinare quale tra i vari algoritmi è il migliore in un caso o nell'altro. Le metriche più utilizzate sono le seguenti:
+
+* Utilizzo della CPU: si vuole ottenere il massimo utilizzo possibile della CPU evitando momenti in cui questa si trovi in idle o in polling ("a non far niente").
+* Throughput: Questo indica il numero di processi completati nell'unità di tempo. Nonostante questo parametro sia legato a quello precedente (difficilmente si può avere un throughput elevato con un utilizzo basso di CPU oppure il contrario) questi non sono la stessa cosa.
+* Tempo di attesa: Indica la quantità totale di tempo sprecato da un processo in coda di attesa. Ovviamente più alto è il valore peggiore si rivelerà essere l'algoritmo. 
+* Turnaround (tempo di completamento): indica il tempo totale impiegato da un processo per terminare da quando viene ammesso nel sistema. Questo parametro diventa veramente importante se messo in relazione con il tempo di risposta ed il tempo di attesa.
+* Response time (Tempo di risposta): indica il tempo trascorso dall'ammissione di un processo nel sistema fino alla sua prima esecuzione. 
+
+Un algoritmo di scheduling è buono quanto più riesce a:
+
+1. Minimizzare l'utilizzo della CPU ed il Throughput.
+2. Massimizzare i tempi di turnaround, attesa e risposta.
+
+#### First Come First Served (FCFS)
+
+È uno degli algoritmi di scheduling più semplici che si possano implementare. Si potrebbe dire che il paradigma utilizzato è: "Chi prima arriva meglio alloggia", infatti la coda dei processi viene tratta come una coda FIFO (first in first out). 
+
+Come detto precedentemente questo algoritmo è molto semplice da implementare ma ovviamente risulta non essere molto efficiente soprattutto perché non prevede alcun tipo di prelazione, il che causa un **effetto convoglio**.
+L'effetto convoglio è un termine per indicare l'accodamento di processi brevi dietro a processi lunghi precedentemente arrivati, questo abbassa drasticamente il throughput il che ovviamente rende questo algoritmo meno appetibile.
+
+**N.B.** L'effetto convoglio è un classico esempio della differenza tra Throughput ed Utilizzo della CPU (vedesi img).
+
+![Esempio effetto convoglio](res/es_effetto_convoglio.png)
+
+
+
+
+
 
 
 
