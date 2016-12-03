@@ -72,7 +72,8 @@ void main(int argc, char *argv[]){
     pid = fork(); /* genera un nuovo processo */
 
     if (pid < 0) { /* errore */
-        fprintf(stderr, “Errore di creazione”); exit(-1);
+        fprintf(stderr, “Errore di creazione”); 
+        exit(-1);
     } else if (pid == 0) { /* codice del figlio */
         execlp(“/bin/ls”, “ls”, NULL); } 
     else { /* codice del padre */
@@ -249,7 +250,7 @@ Come scritto in precedenza è possibile effettuare solo una stima del prossimo b
 Questi due fattori vengono utilizzati insieme ad un parametro che viene scelto in fase implementativa: 0 &le; &alpha; &le; 1.
 
 La formula per la stima è la seguente:
-τ<sub>n+1</sub> = α * t<sub>n</sub> + (1-α) * τ<sub>n</sub>
+<center>τ<sub>n+1</sub> = α * t<sub>n</sub> + (1-α) * τ<sub>n</sub></center>
 
 **N.B.** Ci sono un paio di osservazioni importanti:
 
@@ -260,7 +261,7 @@ La formula per la stima è la seguente:
 
 #### Scheduling a priorità 
 
-L'SJF è un algoritmo che in qualche modo contiene il concetto di priorità, basti pensare alla priorità come se fosse:<br> 1 / burst_di_CPU.
+L'SJF è un algoritmo che in qualche modo contiene il concetto di priorità, basti pensare alla priorità come se fosse: 1 / burst<sub>CPU</sub>.
 
 Il procedimento di un generico algoritmo di scheduling con priorità è il seguente:
 
@@ -271,8 +272,68 @@ Il procedimento di un generico algoritmo di scheduling con priorità è il segue
 Le problematiche che subito vengono in mente in questo caso sono le seguenti:
 
 * Come assengare la priorità.
-* Come scegliere quando il 
+* Scegliere se si vuole implementare un algoritmo preemtive o meno.
+* Se continuano a venire fuori degli algoritmi con priorità molto alta, uno con priorità più bassa rischia di non essere mai eseguito: __*Starvation*__.
+
+Per quanto riguarda la prima problematica vi sono vari modi per assegnare una priorità. Le politiche di assegnamento si dividono in **interne al Sistema Operativo** o **Esterne al Sistema Operativo**.
+Le prime possono riguardare: 
+
+* La quantità di risorse che il processo utilizza.
+* Il tempo trascorso da quando il processo è stato accettato nel sistema.
+* Se il processo è o meno parte del sistema operativo.
+* L'interazione che il processo ha con l'utente.
+* etc.
+
+Si è soliti imporre che i processi con maggior consumo di risorse abbiano una priorità più alta per far si che i processi liberi le risorse il più velocemente possibile, lasciandole libere per i prossimi processi in coda di attesa.
+
+Le politiche esterne all'OS possono essere le più svariate, per esempio: 
+
+* Importanza del processo.
+* Proprietario del processo.
+* Pagamento per l'utilizzo del computer (questo accadeva più nel passato che adesso).
+* etc.
+
+**N.B.** Per cambiare la priorità ad un processo su linux è possibile utilizzare il comando nice. Questo comando tuttavia non cambia la priorità totale del processo ma alza solo 1 dei vari parametri che la compongono di conseguenza **LA PRIORITÀ DI UN PROCESSO NON È MODIFICABILE DA PARTE DEL PROGRAMMATORE**.
+
+Per quanto riguarda il problema di Starvation di un processo l'unico cosa che si può effettivamente fare è cambiare algoritmo e prendere un algoritmo che introduca l'aging (invecchiamento) la possibilità cioè di alzare la priorità di un processo che attende da molto tempo di essere eseguito.
 
 
+#### HRRN - Highest Response Ratio Next
+
+l'HRRN è un algoritmo di scheduling a priorità nel quale si assegna una priorità proporzionale al tempo di attesa del processo ed inversamente proporzionale alla lunghezza del burst di CPU. La formula che permete di calcolare tale priorità è la seguente:
+
+<center>1 + (T<sub>attesa</sub> / Busrt<sub>CPU</sub>)</center>
+
+**N.B.** Questo algoritmo si comporta come l'SJF, ma al contrario suo implementa un meccanismo di aging che è dato dall'inclusione del tempo di attesa nella formula.
+
+Ecco un esempio di funzionamento dell'algoritmo:
+
+![Esempio HRRN](res/HRRN_es.png)
+
+
+#### RR - Round Robin
+
+Questo è un algoritmo non basato su priorità, ma intrinsecamente preemptive. 
+Il funzionamento è il seguente:
+
+1. Ad ogni processo viene assegnato un quanto di tempo (tipicamente dai 10 ai 100 ms).
+2. Allo scadere del quanto di tempo il processo viene prelazionato e messo nella ready queque, la quale viene trattata come una coda circolare.
+
+Uno dei vantaggi principali di questo algoritmo è che ogni processo può attendere al massimo: <center>(n - 1) * q</center> dove:
+
+* n &harr; numero dei processi.
+* q &harr; quanto di tempo assegnato ad ogni processo.
+
+Si può notare immediatamente la somiglianza di RR con FCFS infatti:
+<center>q = &infin; &rarr; RR = FCFS</center>
+Si noti anche che anche un quanto troppo piccolo presenta un problema poiché il context switch inizierebbe a predere un tempo del processo.
+<center>q &lt;&lt; T<sub>context switch</sub> &rarr; utilizzo scarso della CPU </center>
+
+Il problema della scelta del quanto è relativamente semplice da risolvere infatti basta scegliere q tale che circa l'80% dei processi termini il suo burst di CPU in meno di q così si limitano i tempi di attesa.
+
+Per quanto riguarda le prestazioni possiamo paragonare RR a SJF nel seguente modo:
+
+* T<sub>turnaround RR</sub> &ge; T<sub>turnaround SJF</sub>
+* T<sub>risposta RR</sub> &le; T<sub>risposta SJF</sub>
 
 
