@@ -1,5 +1,5 @@
 # Appunti Sistemi Operativi
-
+<link rel="stylesheet" type="text/css" href="css/custom.css">
 ## Processi 
 
 Un processo è un istanza di un programma in esecuzione.
@@ -261,7 +261,7 @@ La formula per la stima è la seguente:
 
 #### Scheduling a priorità 
 
-L'SJF è un algoritmo che in qualche modo contiene il concetto di priorità, basti pensare alla priorità come se fosse: 1 / burst<sub>CPU</sub>.
+L'SJF è un algoritmo che in qualche modo contiene il concetto di priorità, basti pensare alla priorità come se fosse: <span class="fr"><span>1</span><span class="fd">burst<sub>CPU</sub></span></span>.
 
 Il procedimento di un generico algoritmo di scheduling con priorità è il seguente:
 
@@ -335,5 +335,41 @@ Per quanto riguarda le prestazioni possiamo paragonare RR a SJF nel seguente mod
 
 * T<sub>turnaround RR</sub> &ge; T<sub>turnaround SJF</sub>
 * T<sub>risposta RR</sub> &le; T<sub>risposta SJF</sub>
+
+#### Scheduling basato su code multilivello
+
+Come abbiamo visto tutti questi algoritmi hanno vantaggi e svantaggi. Ovviamente in base ai processi che si stanno eseguendo, risulta essere più comodo utilizzarne uno piuttosto che un altro. Per esempio:
+
+* Per i demoni (processi che non hanno interazione con l'utente) tornerà utile un algoritmo facile da implementare e che lasci lavorare il più possibile i processi. Si può dunque scegliere un FCFS.
+* I processi in foreground che necessitano di una prolungata interazione con l'utente (hanno probabilmente un interfaccia grafica) avranno probabilmente dei burst di CPU molto brevi seguiti da alcuni burst di I/O molto lunghi (rispetto a quelli di CPU). Si può scegliere un algoritmo RR dato che probabilmente sarà possibile trovare un q abbastanza grande in modo che l'80% dei processi termini il burst di CPU prima della fine del quanto.
+
+Per questo motivo nascono gli algoritmi di scheduling basati su code multilivello. Il concetto fondamentale di questi algoritmi è quello di prendere la Ready Queque e dividerla in più code gestite ognuna con un algoritmo diverso.
+
+Ovviamente nonostante questo meccanismo sia molto comodo risulta molto complesso da implementare. 
+
+Il problema principale che si trova implementando un sistema di questo tipo è lo **Scheduling tra le code**.
+Per implementarlo ci sono due metodi principali:
+
+1. Scheduling basato su time slice: ogni coda ottiene un quanto di tempo in cui schedula i suoi processi. Molto simile al RR.
+2. Scheduling a priorità fissa: ad ogni coda viene assegnata una priorità e si eseguono prima tutti i processi della coda a priorità più alta e poi tutti i processi a priorità più bassa ( normalissimo scheduling a priorità ).
+
+Anche in questo caso, con la prima soluzione, però si crea il problema della starvation. Basti immaginare di avere una coda a priorità molto alta molto popolata si rischia di non eseguire le code a priorità più bassa.
+
+Anche in caso si scelga la seconda soluzione è possibile che un processo a priorità molto bassa in una coda a priorità molto bassa non venga mai eseguito. Per questo motivo sono state pensate le code con feedback in modo che permetta ad un processo di essere spostato da una coda ad un altra, implementando di fatto un meccanismo di aging.
+
+Ecco un esempio di code multilivello:
+
+![Code multilivello](res/es_multicode.png)
+
+#### Scheduling Fair Share
+
+Il Fair Share è un algoritmo che fa in modo di orientare lo scheduling non al singolo processo ma ad un gruppo di processi, che normalmente compongono un applicazione.
+
+Per fare questo viene aggiunta una vase in cui si schedulano i gruppi di processi scegliendo quante risorse vengono allocate per ogni gruppo, ad esempio: Supponiamo di avere 3 applicazioni composte da n processi l'una e si decide che il primo gruppo deve avere il 25% del tempo di CPU il secondo il 35% ed il 3° il 40%. Effettuata questa fase si passa ad una seconda fase in cui si schedulano i processi appartenenti ad una singola applicazione. 
+
+Esempio scheduler Fair Share
+
+![Esempio Fair Share](res/es_fair-share.png)
+
 
 
